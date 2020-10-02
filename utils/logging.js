@@ -2,11 +2,8 @@ const
 	fs = require('fs'),
 	winston = require('winston'),
 	dailyRotateFile = require('winston-daily-rotate-file'),
-	Stomp = require('stomp-client'),
-	dateFormat = require('dateformat'),
-	util = require('util'),
 	R = require('ramda'),
-	misc = require('./misc'),
+	sha1 = require('sha1'),
 	format = winston.format
 
 const
@@ -39,7 +36,6 @@ logger.stream = {
 }
 
 var transport, fileTransport, consoleTransport
-var MQDetails, stompClient
 var prevConfigHash = 0
 
 if (!fs.existsSync(dir)){
@@ -53,7 +49,8 @@ function addFileTransport(level) {
 
 function configure(cfg) {
 
-	let h = misc.hash(cfg)
+	//let h = misc.hash(cfg) 
+	let h = sha1(JSON.stringify(cfg));
 	//Only makes recomputations if config data changed
 	if (h != prevConfigHash) {
 
@@ -88,44 +85,7 @@ function configure(cfg) {
 			logger.add(transport, {}, true)
 		}
 
-		if (R.pathEq(['activeMQConf', 'enabled'], true, cfg)) {
-			let mqSetUp = cfg.activeMQConf
-			MQDetails = {
-				CLIENT_QUEUE_NAME: 'oauth2.audit.logging',
-				host: mqSetUp.host,
-				port: mqSetUp.port,
-				user: mqSetUp.username,
-				password: mqSetUp.password,
-				protocolVersion: '1.1',
-				reconnectOpts: {
-					retries: 10,
-					delay: 5000
-				}
-			}
-			stompClient = new Stomp(MQDetails)
-			stompClient.connect(
-				sessionId => logger.info('Connected to STOMP server')
-				//, The error callback is called successively until the connection succeeds...
-				//e => logger.error(`Error connecting to STOMP server: ${e.message}`)
-			)
-
-		} else {
-			MQDetails = undefined
-			if (stompClient) {
-				stompClient.disconnect(() => {
-					logger.info('Disconnected from STOMP server')
-				})
-			}
-		}
-
 		log2('info', 'Loggers reconfigured')
-	}
-
-}
-
-function sendMQMessage(msg) {
-    if (MQDetails){
-		stompClient.publish('/' + MQDetails.CLIENT_QUEUE_NAME, msg)
 	}
 }
 
@@ -149,14 +109,10 @@ function log2(level, msg) {
 	//Log it to MQ
 	args[1] = level + ": " + args[1]
 	args.shift()
-
-	sendMQMessage(R.apply(util.format, args))
-
 }
 
 module.exports = {
 	logger: logger,
 	configure: configure,
-	log2: log2,
-	sendMQMessage: sendMQMessage
+	log2: log2
 }
