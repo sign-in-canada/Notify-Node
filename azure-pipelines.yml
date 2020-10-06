@@ -16,38 +16,6 @@ steps:
 
 - task: Npm@1
   inputs:
-    command: install
+    command: publish
     publishRegistry: useFeed
     publishFeed: 'Sign in Canada/SignInCanada'
-
-- script: |
-    tar -czvf $(Build.ArtifactStagingDirectory)/notify-version_1.0.0-node_modules.tar.gz node_modules
-  displayName: 'Package dependencies'
-  continueOnError: true
-
-- task: CopyFiles@2
-  inputs:
-    SourceFolder: '$(Pipeline.Workspace)/s'
-    Contents: |
-      **LICENSE
-      **package.json
-      **package-lock.json
-      **README.md
-      **utils/**
-      **app.js
-    TargetFolder: '$(Pipeline.Workspace)/package'
-
-- script: |
-    echo 'packaging the files'
-    cd $(Pipeline.Workspace)
-    pwd
-    tar -czv --owner=node --group=node -f $(Build.ArtifactStagingDirectory)/notify.tgz package
-  displayName: 'create application tarball'
-  continueOnError: true
-
-- task: PublishPipelineArtifact@1
-  inputs:
-    targetPath: '$(Build.ArtifactStagingDirectory)'
-    artifact: 'Notify-Node'
-    publishLocation: 'pipeline'
-  condition: succeededOrFailed()
