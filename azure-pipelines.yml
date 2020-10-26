@@ -20,7 +20,7 @@ steps:
 
 - task: ArchiveFiles@2
   inputs:
-    rootFolderOrFile: '$(Build.SourcesDirectory)'/Notify-Node
+    rootFolderOrFile: '$(Build.SourcesDirectory)/Notify-Node'
     includeRootFolder: false
     archiveType: 'tar'
     tarCompression: 'gz'
