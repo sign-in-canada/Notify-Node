@@ -16,6 +16,21 @@ steps:
 
 - task: Npm@1
   inputs:
-    command: publish
-    publishRegistry: useFeed
-    publishFeed: 'Sign in Canada/SignInCanada'
+    command: install
+
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '$(Build.SourcesDirectory)'/Notify-Node
+    includeRootFolder: false
+    archiveType: 'tar'
+    tarCompression: 'gz'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/node-services.tgz' 
+    replaceExistingArchive: true 
+    verbose: true
+
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: '$(Build.ArtifactStagingDirectory)'
+    artifact: 'node-services'
+    publishLocation: 'pipeline'
+  condition: succeededOrFailed()
