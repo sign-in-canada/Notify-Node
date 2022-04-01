@@ -54,7 +54,7 @@ app.post('/gc/services/notify', (req, res) => {
     res.end();
 });
 
-app.listen(httpPort, () => {
+app.listen(httpPort, '127.0.0.1', () => {
     logger.log2('info', `GC application service started on port ${httpPort}`);   
 });
 
